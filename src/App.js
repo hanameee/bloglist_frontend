@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "./App.css";
 import axios from "axios";
+const baseURL = "/api/blogs";
 
 function App() {
     const [blogs, setBlogs] = useState();
@@ -19,7 +20,7 @@ function App() {
 
     useEffect(() => {
         console.log("Useeffect");
-        axios.get("http://localhost:3001/api/blogs").then(response => {
+        axios.get(baseURL).then(response => {
             setBlogs(response.data);
             console.log(response.data);
         });
