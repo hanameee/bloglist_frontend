@@ -11,7 +11,7 @@ function App() {
             <div
                 className="blogItem"
                 style={{ marginBottom: "10px" }}
-                key={blog._id}
+                key={blog.id}
             >
                 <li>writer: {blog.author}</li>
                 <li>content: {blog.title}</li>
@@ -28,9 +28,13 @@ function App() {
 
     return (
         <div className="App">
-            <h1>blog-list-frontend</h1>
-            <div className="blogList">
-                <ul>{blog}</ul>
+            <div className="Container">
+                <div class="Blog">
+                    <h1>blog-list-frontend</h1>
+                    <div className="blogList">
+                        <ul>{blog}</ul>
+                    </div>
+                </div>
             </div>
         </div>
     );
