@@ -6,16 +6,20 @@ import loginService from "./Services/login";
 
 function App() {
     const [blogs, setBlogs] = useState();
+    const [user, setUser] = useState();
     const [username, setUsername] = useState();
     const [password, setPassword] = useState();
+
     const handleLogin = async event => {
         event.preventDefault();
         try {
             const User = await loginService.login({ username, password });
+            setUser(User);
         } catch (exception) {
             console.log(exception);
         }
     };
+
     const blog =
         blogs &&
         blogs.map(blog => (
@@ -28,33 +32,39 @@ function App() {
                 <li>content: {blog.title}</li>
             </div>
         ));
-    const loginForm = () => (
-        <form onSubmit={handleLogin}>
-            <div>
-                username:
-                <input
-                    type="text"
-                    name="Username"
-                    value={username}
-                    onChange={({ target }) => {
-                        setUsername(target.value);
-                    }}
-                />
-            </div>
-            <div>
-                password:
-                <input
-                    type="password"
-                    name="Password"
-                    value={password}
-                    onChange={({ target }) => {
-                        setPassword(target.value);
-                    }}
-                />
-            </div>
-            <button type="submit">login</button>
-        </form>
-    );
+
+    const loginForm = () => {
+        if (user == null)
+            return (
+                <form onSubmit={handleLogin}>
+                    <h1>Login</h1>
+                    <div>
+                        username:
+                        <input
+                            type="text"
+                            name="Username"
+                            value={username}
+                            onChange={({ target }) => {
+                                setUsername(target.value);
+                            }}
+                        />
+                    </div>
+                    <div>
+                        password:
+                        <input
+                            type="password"
+                            name="Password"
+                            value={password}
+                            onChange={({ target }) => {
+                                setPassword(target.value);
+                            }}
+                        />
+                    </div>
+                    <button type="submit">login</button>
+                </form>
+            );
+    };
+
     useEffect(() => {
         blogService.getAll().then(response => setBlogs(response.data));
     }, []);
@@ -64,10 +74,14 @@ function App() {
             <div className="Container">
                 <div className="Blog">
                     <h1>blog-list-frontend</h1>
-                    <div className="blogList">
-                        {loginForm()}
-                        <ul>{blog}</ul>
-                    </div>
+                    {user ? (
+                        <div className="blogList">
+                            <p>{user.username} logged in</p>
+                            <ul>{blog}</ul>
+                        </div>
+                    ) : (
+                        loginForm()
+                    )}
                 </div>
             </div>
         </div>
