@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import "./App.css";
 import blogService from "./Services/blogs";
 import loginService from "./Services/login";
+import Notification from "./Components/notification";
 
 function App() {
     const [blogs, setBlogs] = useState();
@@ -12,6 +13,11 @@ function App() {
     const [blogTitle, setBlogTitle] = useState("");
     const [blogAuthor, setBlogAuthor] = useState("");
     const [blogUrl, setBlogUrl] = useState("");
+    const initialMessage = {
+        content: "",
+        type: null
+    };
+    const [message, setMessage] = useState(initialMessage);
 
     const handleLogin = async event => {
         event.preventDefault();
@@ -25,14 +31,34 @@ function App() {
             setUser(User);
             setUsername("");
             setPassword("");
+            setMessage({
+                type: "notice",
+                content: `successfully logged in :)`
+            });
+            setTimeout(() => {
+                setMessage(initialMessage);
+            }, 3000);
         } catch (exception) {
-            console.log(exception);
+            setMessage({
+                type: "warning",
+                content: `wrong username or password`
+            });
+            setTimeout(() => {
+                setMessage(initialMessage);
+            }, 3000);
         }
     };
 
     const handleLogout = () => {
         window.localStorage.removeItem("loggedBlogAppUser");
-        window.location.reload(true);
+        setMessage({
+            type: "notice",
+            content: "successfully logged out :) will be redirected in 3 sec."
+        });
+        setTimeout(() => {
+            setMessage(initialMessage);
+            window.location.reload(true);
+        }, 3000);
     };
 
     const createBlog = event => {
@@ -42,13 +68,32 @@ function App() {
             author: blogAuthor,
             url: blogUrl
         };
-        blogService.createBlog(newBlogObject).then(returnedBlog => {
-            setBlogs(blogs.concat(returnedBlog));
-            setBlogTitle("");
-            setBlogAuthor("");
-            setBlogUrl("");
-        });
+        blogService
+            .createBlog(newBlogObject)
+            .then(returnedBlog => {
+                setBlogs(blogs.concat(returnedBlog));
+                setBlogTitle("");
+                setBlogAuthor("");
+                setBlogUrl("");
+                setMessage({
+                    type: "notice",
+                    content: `${blogTitle} by ${blogAuthor} added`
+                });
+                setTimeout(() => {
+                    setMessage(initialMessage);
+                }, 3000);
+            })
+            .catch(() => {
+                setMessage({
+                    type: "warning",
+                    content: `post failed - blog title and author are mandatory field`
+                });
+                setTimeout(() => {
+                    setMessage(initialMessage);
+                }, 3000);
+            });
     };
+
     const blogList = () => {
         const blogInfo =
             blogs &&
@@ -65,7 +110,7 @@ function App() {
         return (
             <>
                 <div className="blogForm">
-                    <h1>Create New</h1>
+                    <h2>Create New</h2>
                     <form onSubmit={createBlog}>
                         <div className="blogFormItem">
                             <span>title </span>
@@ -104,7 +149,7 @@ function App() {
                     </form>
                 </div>
                 <div className="blogList">
-                    <h1>blogs</h1>
+                    <h2>blogs</h2>
                     <p>
                         <b>{user.username}</b> logged in{" "}
                         <button onClick={handleLogout}>logout</button>
@@ -117,7 +162,7 @@ function App() {
 
     const loginForm = () => (
         <form onSubmit={handleLogin}>
-            <h1>Login</h1>
+            <h2>Login</h2>
             <div>
                 username:
                 <input
@@ -160,7 +205,11 @@ function App() {
     return (
         <div className="App">
             <div className="Container">
-                <div className="Blog">{user ? blogList() : loginForm()}</div>
+                <div className="Blog">
+                    <h1>Blog Application</h1>
+                    <Notification message={message} />
+                    {user ? blogList() : loginForm()}
+                </div>
             </div>
         </div>
     );
