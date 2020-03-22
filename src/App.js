@@ -7,17 +7,28 @@ import loginService from "./Services/login";
 function App() {
     const [blogs, setBlogs] = useState();
     const [user, setUser] = useState();
-    const [username, setUsername] = useState();
-    const [password, setPassword] = useState();
+    const [username, setUsername] = useState("");
+    const [password, setPassword] = useState("");
 
     const handleLogin = async event => {
         event.preventDefault();
         try {
             const User = await loginService.login({ username, password });
+            window.localStorage.setItem(
+                "loggedBlogAppUser",
+                JSON.stringify(User)
+            );
             setUser(User);
+            setUsername("");
+            setPassword("");
         } catch (exception) {
             console.log(exception);
         }
+    };
+
+    const handleLogout = () => {
+        window.localStorage.removeItem("loggedBlogAppUser");
+        window.location.reload(true);
     };
 
     const blog =
@@ -69,14 +80,25 @@ function App() {
         blogService.getAll().then(response => setBlogs(response.data));
     }, []);
 
+    useEffect(() => {
+        const loggedUserJSON = window.localStorage.getItem("loggedBlogAppUser");
+        if (loggedUserJSON) {
+            const User = JSON.parse(loggedUserJSON);
+            setUser(User);
+        }
+    }, []);
+
     return (
         <div className="App">
             <div className="Container">
                 <div className="Blog">
-                    <h1>blog-list-frontend</h1>
                     {user ? (
                         <div className="blogList">
-                            <p>{user.username} logged in</p>
+                            <h1>blog-list-frontend</h1>
+                            <p>
+                                {user.username} logged in{" "}
+                                <button onClick={handleLogout}>logout</button>
+                            </p>
                             <ul>{blog}</ul>
                         </div>
                     ) : (
