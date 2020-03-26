@@ -4,25 +4,21 @@ import "./App.css";
 import blogService from "./Services/blogs";
 import loginService from "./Services/login";
 import Notification from "./Components/notification";
-import LoginForm from "./Components/login";
+import LoginForm from "./Components/loginForm";
+import BlogForm from "./Components/blogForm";
+import Togglable from "./Components/togglable";
 
 function App() {
     const [blogs, setBlogs] = useState();
     const [user, setUser] = useState();
-    const [username, setUsername] = useState("");
-    const [password, setPassword] = useState("");
-    const [blogTitle, setBlogTitle] = useState("");
-    const [blogAuthor, setBlogAuthor] = useState("");
-    const [blogUrl, setBlogUrl] = useState("");
     const initialMessage = {
         content: "",
         type: null
     };
     const [message, setMessage] = useState(initialMessage);
-    const [loginVisible, setLoginVisible] = useState(false);
+    const blogFormRef = React.createRef();
 
-    const handleLogin = async event => {
-        event.preventDefault();
+    const handleLogin = async ({ username, password }) => {
         try {
             const User = await loginService.login({ username, password });
             window.localStorage.setItem(
@@ -31,8 +27,7 @@ function App() {
             );
             blogService.setToken(User.token);
             setUser(User);
-            setUsername("");
-            setPassword("");
+
             setMessage({
                 type: "notice",
                 content: `successfully logged in :)`
@@ -63,23 +58,15 @@ function App() {
         }, 3000);
     };
 
-    const createBlog = event => {
-        event.preventDefault();
-        const newBlogObject = {
-            title: blogTitle,
-            author: blogAuthor,
-            url: blogUrl
-        };
+    const createBlog = newBlogObject => {
+        blogFormRef.current.toggleVisiblity();
         blogService
             .createBlog(newBlogObject)
             .then(returnedBlog => {
                 setBlogs(blogs.concat(returnedBlog));
-                setBlogTitle("");
-                setBlogAuthor("");
-                setBlogUrl("");
                 setMessage({
                     type: "notice",
-                    content: `${blogTitle} by ${blogAuthor} added`
+                    content: `${returnedBlog.title} by ${returnedBlog.author} added`
                 });
                 setTimeout(() => {
                     setMessage(initialMessage);
@@ -88,7 +75,7 @@ function App() {
             .catch(() => {
                 setMessage({
                     type: "warning",
-                    content: `post failed - blog title and author are mandatory field`
+                    content: `post failed - blog title and author are mandatory fields`
                 });
                 setTimeout(() => {
                     setMessage(initialMessage);
@@ -111,45 +98,7 @@ function App() {
             ));
         return (
             <>
-                <div className="blogForm">
-                    <h2>Create New</h2>
-                    <form onSubmit={createBlog}>
-                        <div className="blogFormItem">
-                            <span>title </span>
-                            <input
-                                type="text"
-                                value={blogTitle}
-                                onChange={({ target }) =>
-                                    setBlogTitle(target.value)
-                                }
-                                name="BlogTitle"
-                            />
-                        </div>
-                        <div className="blogFormItem">
-                            <span>author </span>
-                            <input
-                                type="text"
-                                value={blogAuthor}
-                                onChange={({ target }) =>
-                                    setBlogAuthor(target.value)
-                                }
-                                name="BlogAuthor"
-                            />
-                        </div>
-                        <div className="blogFormItem">
-                            <span>url </span>
-                            <input
-                                type="text"
-                                value={blogUrl}
-                                onChange={({ target }) =>
-                                    setBlogUrl(target.value)
-                                }
-                                name="BlogUrl"
-                            />
-                        </div>
-                        <button type="submit">post</button>
-                    </form>
-                </div>
+                {blogForm()}
                 <div className="blogList">
                     <h2>blogs</h2>
                     <p>
@@ -162,40 +111,22 @@ function App() {
         );
     };
 
-    const handleUsernameChange = e => {
-        setUsername(e.target.value);
-    };
-
-    const handlePasswordChange = e => {
-        setPassword(e.target.value);
-    };
-
     const loginForm = () => {
-        const hideWhenVisible = { display: loginVisible ? "none" : "" };
-        const showWhenVisible = { display: loginVisible ? "" : "none" };
-
         return (
-            <div>
-                <div style={hideWhenVisible}>
-                    <button onClick={() => setLoginVisible(true)}>
-                        log in
-                    </button>
-                </div>
-                <div style={showWhenVisible}>
-                    <LoginForm
-                        handleLogin={handleLogin}
-                        username={username}
-                        password={password}
-                        handleUsernameChange={handleUsernameChange}
-                        handlePasswordChange={handlePasswordChange}
-                    />
-                    <button onClick={() => setLoginVisible(false)}>
-                        close
-                    </button>
-                </div>
-            </div>
+            <Togglable label="log in">
+                <LoginForm handleLogin={handleLogin} />
+            </Togglable>
         );
     };
+
+    const blogForm = () => {
+        return (
+            <Togglable label="create new blog" ref={blogFormRef}>
+                <BlogForm createBlog={createBlog} />
+            </Togglable>
+        );
+    };
+
     useEffect(() => {
         blogService.getAll().then(returnedData => setBlogs(returnedData));
     }, []);
