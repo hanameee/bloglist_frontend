@@ -227,3 +227,202 @@ useEffect(()=> {
 },[])
 ```
 
+---
+## [b) props.children and proptypes](https://fullstackopen.com/en/part5/props_children_and_proptypes)
+
+#### The components children, aka. props.children
+
+버튼을 눌렀을 때에만 form이 보이도록 하고 싶다면?
+
+Togglable 컴포넌트를 작성한다.
+
+```react
+import React, { useState } from "react";
+
+const Togglable = props => {
+    const [visible, setVisible] = useState(false);
+
+    const hideWhenVisible = { display: visible ? "none" : "" };
+    const showWhenVisible = { display: visible ? "" : "none" };
+
+    const toggleVisibility = () => {
+        setVisible(!visible);
+    };
+
+    return (
+        <div>
+            <div style={hideWhenVisible}>
+                <button onClick={toggleVisibility}>{props.buttonLabel}</button>
+            </div>
+            <div style={showWhenVisible}>
+                {props.children}
+                <button onClick={toggleVisibility}>cancel</button>
+            </div>
+        </div>
+    );
+};
+
+export default Togglable;
+```
+
+Togglable 하게 만들고 싶은 컴포넌트를 Togglable 로 감싸준다.
+
+```react
+<Togglable buttonLabel="create new note">
+    <NoteForm
+  addNote={addNote}
+  newNote={newNote}
+  handleNoteChange={handleNoteChange}
+  />
+  </Togglable>
+```
+
+`props.children` 은 React에 의해 항상 추가되는 prop 이다.
+Togglable에서 props.children 은 Togglable 안에 감싸진 component인 NoteForm이 된다.
+
+#### State of the forms
+
+현재는 App.js에서 모든 state가 관리되고 있다.
+
+```react
+// ...
+const App = () => {
+    const [notes, setNotes] = useState([]);
+    const [newNote, setNewNote] = useState("");
+    const [showAll, setShowAll] = useState(true);
+    const initialMessage = {
+        content: "",
+        type: null
+    };
+    const [message, setMessage] = useState(initialMessage);
+    const [username, setUsername] = useState("");
+    const [password, setPassword] = useState("");
+    const [user, setUser] = useState(null);
+// ...
+```
+
+그런데, [React document](https://reactjs.org/docs/lifting-state-up.html) 에서는 state의 관리 위치에 대해 아래와 같이 말하고 있다.
+
+> Often, several components need to reflect the same changing data. We recommend lifting the shared state up to their closest common ancestor.
+
+NoteForm 의 state (생성되기 전 입력된 note 정보와 같은 경우) 는 App에서 알고 있을 필요가 없다. 그냥 NoteForm 에서 알아서 관리해도 된다.
+
+`components/NoteForm`
+
+```react
+import React, { useState } from "react";
+
+const NoteForm = ({ createNote }) => {
+    const [newNote, setNewNote] = useState("");
+    const handleNoteChange = event => {
+        setNewNote(event.target.value);
+    };
+  	// ajax 요청을 보내는 createNote 함수만 prop으로 받고, 그 외 note state와 관련된 부분은 NoteForm에서 처리한다.
+    const addNote = event => {
+        event.preventDefault();
+        createNote({
+            content: newNote,
+            date: new Date().toISOString(),
+            important: Math.random() > 0.5
+        });
+        setNewNote("");
+    };
+    return (
+        <form onSubmit={addNote}>
+            <input value={newNote} onChange={handleNoteChange} />
+            <button type="submit">save</button>
+        </form>
+    );
+};
+
+export default NoteForm;
+```
+
+`App.js`
+
+App.js에는 handleNoteChange, newNoted의 useState, addNote 는 다 삭제하고 오로지 ajax 요청을 한 뒤 notes 상태를 갱신하는 `createNote` 함수만 놔둔다.
+
+```react
+const createNote = noteObject => {
+  noteService.create(noteObject).then(returnedNote => {
+    setNotes(notes.concat(returnedNote));
+  });
+};
+```
+
+이 함수를 NoteState 컴포넌트에 전달해줘서 NoteState에서 새롭게 만든 객체로 POST 요청을 보낼 수 있게!
+
+#### References to components with ref
+
+[참고 링크]([https://velog.io/@marvin-j/React-ref-%EC%82%AC%EC%9A%A9%ED%95%98%EA%B8%B0](https://velog.io/@marvin-j/React-ref-사용하기))
+
+새로운 노트를 생성하는 즉시 noteForm 이 Toggle 되는 기능을 구현해보자.
+이 기능을 구현할 때 문제점이 하나 있는데, 새로운 노트를 생성하는 함수 `createNote`는 App 컴포넌트에서 관리하고 Togglable div가 닫히는 함수 `toggleVisibility` 는 Togglable 컴포넌트에서 관리한다는 점.
+
+하위 컴포넌트의 함수인 `toggleVisibility` 를 상위 컴포넌트인 App 에서 접근하기 위해서는 `ref` 기능을 사용할 수 있다.
+
+1. 상위 컴포넌트에서 ref를 생성해 하위 컴포넌트에게 전달
+
+```react
+const App = () => {
+  // ...
+  const noteFormRef = React.createRef()
+
+  const noteForm = () => (
+    <Togglable buttonLabel='new note' ref={noteFormRef}>
+      <NoteForm createNote={addNote} />
+    </Togglable>
+  )
+
+  // ...
+```
+
+2. 하위 컴포넌트를 `forwardRef` hook 으로 감싸고, useImperativeHandle hook로 상위 컴포넌트에게 전달하고 싶은 친구들을 콜백함수로 리턴
+
+```react
+import React, { useState, useImperativeHandle } from "react";
+
+// 전체 컴포넌트를 forwardRef hook으로 감싼다
+const Togglable = React.forwardRef((props, ref) => {
+    const [visible, setVisible] = useState(false);
+
+    const hideWhenVisible = { display: visible ? "none" : "" };
+    const showWhenVisible = { display: visible ? "" : "none" };
+
+    const toggleVisibility = () => {
+        setVisible(!visible);
+    };
+  
+  	// 콜백함수로 toggleVisibility 를 넘겨준다
+    useImperativeHandle(ref, () => {
+        return { toggleVisibility };
+    });
+
+    return (
+        <div>
+            <div style={hideWhenVisible}>
+                <button onClick={toggleVisibility}>{props.buttonLabel}</button>
+            </div>
+            <div style={showWhenVisible}>
+                {props.children}
+                <button onClick={toggleVisibility}>cancel</button>
+            </div>
+        </div>
+    );
+});
+
+export default Togglable;
+```
+
+3. 상위 컴포넌트에서 `ref이름.current.원하는친구` 로 접근 가능
+
+```react
+const createNote = noteObject => {
+  // 이렇게 접근할 수 있지요
+  noteFormRef.current.toggleVisibility();
+  noteService.create(noteObject).then(returnedNote => {
+    setNotes(notes.concat(returnedNote));
+  });
+};
+```
+

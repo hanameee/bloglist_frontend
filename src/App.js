@@ -4,6 +4,7 @@ import "./App.css";
 import blogService from "./Services/blogs";
 import loginService from "./Services/login";
 import Notification from "./Components/notification";
+import LoginForm from "./Components/login";
 
 function App() {
     const [blogs, setBlogs] = useState();
@@ -18,6 +19,7 @@ function App() {
         type: null
     };
     const [message, setMessage] = useState(initialMessage);
+    const [loginVisible, setLoginVisible] = useState(false);
 
     const handleLogin = async event => {
         event.preventDefault();
@@ -160,35 +162,40 @@ function App() {
         );
     };
 
-    const loginForm = () => (
-        <form onSubmit={handleLogin}>
-            <h2>Login</h2>
-            <div>
-                username:
-                <input
-                    type="text"
-                    name="Username"
-                    value={username}
-                    onChange={({ target }) => {
-                        setUsername(target.value);
-                    }}
-                />
-            </div>
-            <div>
-                password:
-                <input
-                    type="password"
-                    name="Password"
-                    value={password}
-                    onChange={({ target }) => {
-                        setPassword(target.value);
-                    }}
-                />
-            </div>
-            <button type="submit">login</button>
-        </form>
-    );
+    const handleUsernameChange = e => {
+        setUsername(e.target.value);
+    };
 
+    const handlePasswordChange = e => {
+        setPassword(e.target.value);
+    };
+
+    const loginForm = () => {
+        const hideWhenVisible = { display: loginVisible ? "none" : "" };
+        const showWhenVisible = { display: loginVisible ? "" : "none" };
+
+        return (
+            <div>
+                <div style={hideWhenVisible}>
+                    <button onClick={() => setLoginVisible(true)}>
+                        log in
+                    </button>
+                </div>
+                <div style={showWhenVisible}>
+                    <LoginForm
+                        handleLogin={handleLogin}
+                        username={username}
+                        password={password}
+                        handleUsernameChange={handleUsernameChange}
+                        handlePasswordChange={handlePasswordChange}
+                    />
+                    <button onClick={() => setLoginVisible(false)}>
+                        close
+                    </button>
+                </div>
+            </div>
+        );
+    };
     useEffect(() => {
         blogService.getAll().then(returnedData => setBlogs(returnedData));
     }, []);

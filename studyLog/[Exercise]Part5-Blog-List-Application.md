@@ -2,5 +2,3 @@
 
 ---
 
-## part a) Login in frontend
-
