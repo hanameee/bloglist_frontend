@@ -25,11 +25,20 @@ const BlogInfo = ({ blog, increaseLike }) => {
             <li>
                 <b>{blog.title}</b> by {blog.author}{" "}
                 <button onClick={toggleVisible}>
-                    {blogVisible ? "view" : "hide"}
+                    {blogVisible ? "hide" : "view"}
                 </button>
             </li>
             <div style={showWhenVisible}>
-                <li>url: {blog.url}</li>
+                <li>
+                    url:{" "}
+                    <a
+                        href={`${blog.url}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                    >
+                        {blog.url}
+                    </a>
+                </li>
                 <li>
                     likes: {blog.likes}{" "}
                     <button onClick={handleLike}>like</button>

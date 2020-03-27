@@ -97,6 +97,7 @@ function App() {
     };
 
     const blogList = () => {
+        blogs && blogs.sort((a, b) => (a.likes > b.likes ? -1 : 1));
         return (
             <>
                 {blogForm()}
