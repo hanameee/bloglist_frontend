@@ -85,6 +85,17 @@ function App() {
             });
     };
 
+    const increaseLike = (id, updateBlogObject) => {
+        blogService
+            .increaseLike(id, updateBlogObject)
+            .then(returnedBlog => {
+                setBlogs(
+                    blogs.filter(blog => (blog.id === id ? returnedBlog : blog))
+                );
+            })
+            .catch(exception => console.log(exception));
+    };
+
     const blogList = () => {
         return (
             <>
@@ -97,7 +108,11 @@ function App() {
                     </p>
                     {blogs &&
                         blogs.map(blog => (
-                            <BlogInfo blog={blog} key={blog.id} />
+                            <BlogInfo
+                                blog={blog}
+                                key={blog.id}
+                                increaseLike={increaseLike}
+                            />
                         ))}
                 </div>
             </>

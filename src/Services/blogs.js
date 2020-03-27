@@ -19,4 +19,9 @@ const createBlog = async newBlogObject => {
     const response = await axios.post(baseURL, newBlogObject, config);
     return response.data;
 };
-export default { getAll, setToken, createBlog };
+
+const increaseLike = async (id, updateBlogObject) => {
+    const response = await axios.put(baseURL + `/${id}`, updateBlogObject);
+    return response.data;
+};
+export default { getAll, setToken, createBlog, increaseLike };

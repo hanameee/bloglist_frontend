@@ -1,12 +1,19 @@
 import React, { useState } from "react";
 
-const BlogInfo = ({ blog }) => {
+const BlogInfo = ({ blog, increaseLike }) => {
     const [blogVisible, setBlogVisible] = useState(false);
 
     const toggleVisible = () => {
         setBlogVisible(!blogVisible);
     };
 
+    const handleLike = () => {
+        const updatedBlogObject = {
+            ...blog,
+            likes: (blog.likes += 1)
+        };
+        increaseLike(blog.id, updatedBlogObject);
+    };
     const showWhenVisible = { display: blogVisible ? "" : "none" };
 
     return (
@@ -24,7 +31,8 @@ const BlogInfo = ({ blog }) => {
             <div style={showWhenVisible}>
                 <li>url: {blog.url}</li>
                 <li>
-                    likes: {blog.likes} <button>like</button>
+                    likes: {blog.likes}{" "}
+                    <button onClick={handleLike}>like</button>
                 </li>
                 <li>user: {blog.user.username}</li>
             </div>
