@@ -4,9 +4,10 @@ import "./App.css";
 import blogService from "./Services/blogs";
 import loginService from "./Services/login";
 import Notification from "./Components/notification";
-import LoginForm from "./Components/loginForm";
-import BlogForm from "./Components/blogForm";
 import Togglable from "./Components/togglable";
+import LoginForm from "./Components/loginForm";
+import BlogInfo from "./Components/blogInfo";
+import BlogForm from "./Components/blogForm";
 
 function App() {
     const [blogs, setBlogs] = useState();
@@ -16,6 +17,7 @@ function App() {
         type: null
     };
     const [message, setMessage] = useState(initialMessage);
+
     const blogFormRef = React.createRef();
 
     const handleLogin = async ({ username, password }) => {
@@ -84,18 +86,6 @@ function App() {
     };
 
     const blogList = () => {
-        const blogInfo =
-            blogs &&
-            blogs.map(blog => (
-                <div
-                    className="blogItem"
-                    style={{ marginBottom: "10px" }}
-                    key={blog.id}
-                >
-                    <li>writer: {blog.author}</li>
-                    <li>content: {blog.title}</li>
-                </div>
-            ));
         return (
             <>
                 {blogForm()}
@@ -105,7 +95,10 @@ function App() {
                         <b>{user.username}</b> logged in{" "}
                         <button onClick={handleLogout}>logout</button>
                     </p>
-                    {blogInfo}
+                    {blogs &&
+                        blogs.map(blog => (
+                            <BlogInfo blog={blog} key={blog.id} />
+                        ))}
                 </div>
             </>
         );
@@ -113,7 +106,7 @@ function App() {
 
     const loginForm = () => {
         return (
-            <Togglable label="log in">
+            <Togglable openLabel="log in">
                 <LoginForm handleLogin={handleLogin} />
             </Togglable>
         );
@@ -121,7 +114,7 @@ function App() {
 
     const blogForm = () => {
         return (
-            <Togglable label="create new blog" ref={blogFormRef}>
+            <Togglable openLabel="create new blog" ref={blogFormRef}>
                 <BlogForm createBlog={createBlog} />
             </Togglable>
         );
