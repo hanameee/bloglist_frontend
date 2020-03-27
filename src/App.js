@@ -85,6 +85,21 @@ function App() {
             });
     };
 
+    const removeBlog = id => {
+        blogService
+            .removeBlog(id)
+            .then(response => setBlogs(blogs.filter(blog => blog.id !== id)))
+            .catch(error => {
+                setMessage({
+                    type: "warning",
+                    content: `remove failed - you can only remove blog posted by you`
+                });
+                setTimeout(() => {
+                    setMessage(initialMessage);
+                }, 3000);
+            });
+    };
+
     const increaseLike = (id, updateBlogObject) => {
         blogService
             .increaseLike(id, updateBlogObject)
@@ -110,9 +125,11 @@ function App() {
                     {blogs &&
                         blogs.map(blog => (
                             <BlogInfo
-                                blog={blog}
                                 key={blog.id}
+                                blog={blog}
+                                user={user}
                                 increaseLike={increaseLike}
+                                removeBlog={removeBlog}
                             />
                         ))}
                 </div>
